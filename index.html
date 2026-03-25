@@ -153,7 +153,7 @@ button{
 <div class="container">
 
 <div id="tab1" class="tab active">
-<div class="title">CHẠM TỔNG</div>
+<div class="title">TẠO DÀN VIP</div>
 </div>
 
 <div id="tab2" class="tab">
@@ -189,7 +189,7 @@ document.addEventListener('touchend', e => {
 })
 const MIN=4, MAX=40
 const ALL_NUMS = Array.from({length:100},(_,i)=>i.toString().padStart(2,'0'))
-const KEY='tool_lo10_fix'
+const KEY='tool_lo1_fix'
 
 function showTab(i){
   const tabs = document.querySelectorAll('.tab')
@@ -317,7 +317,7 @@ const pairs=id=>{
   return [...new Set(nums)]
 }
 
-/* ================= TAB 1 – CHẠM TỔNG ================= */
+/* ================= TAB 1 – TẠO DÀN VIP ================= */
 function gen(ch,tg,dau,duoi){
   return ALL_NUMS.filter(num=>{
     const a = +num[0]
@@ -353,7 +353,16 @@ function calc1(i){
 
   const lodau = digits('lodau'+i)
   const loduoi = digits('loduoi'+i)
+  const addch = digits('addch'+i)
+  const addto = digits('addto'+i)
+  const addbo = pairs('addbo'+i)
 
+const adddau = digits('adddau'+i)
+const addduoi = digits('addduoi'+i)
+const ghepcham = digits('ghepcham'+i)
+const ghepto   = digits('ghepto'+i)
+const gheptrong = digits('gheptrong'+i)
+const ghepngoai = digits('ghepngoai'+i)
 const hasFilter =
   a.length || b.length ||
   ch.length || to.length ||
@@ -474,6 +483,39 @@ if(addSet.length){
   }
 
 }
+// ===== THÊM FILTER (OR) =====
+if(addch.length || addto.length || addbo.length || adddau.length || addduoi.length){
+
+  const extra = ALL_NUMS.filter(n=>{
+    const x = +n[0]
+    const y = +n[1]
+
+    if(addch.length && (addch.includes(x) || addch.includes(y))) return true
+    if(addto.length && addto.includes((x+y)%10)) return true
+    if(adddau.length && adddau.includes(x)) return true
+    if(addduoi.length && addduoi.includes(y)) return true
+
+    if(addbo.length){
+      const bong = d => (d <= 4) ? String(+d + 5) : String(+d - 5)
+
+      for(let b of addbo){
+        const a=b[0], c=b[1]
+        const set=[
+          a+c,c+a,
+          bong(a)+bong(c),bong(c)+bong(a),
+          a+bong(c),bong(c)+a,
+          c+bong(a),bong(a)+c
+        ]
+        if(set.includes(n)) return true
+      }
+    }
+
+    return false
+  })
+
+  // gộp thêm (OR)
+  r = [...new Set([...r, ...extra])]
+}
   r = [...new Set(r)]
     .sort((a,b)=>parseInt(a)-parseInt(b))
 
@@ -548,7 +590,7 @@ function auto1(){
   }
 }
 function render1(){
-  let h = '<div class="title">CHẠM TỔNG</div>';
+  let h = '<div class="title">TẠO DÀN VIP</div>';
 
   for(let i=1;i<=MAX;i++){
     h+=`
@@ -557,42 +599,50 @@ function render1(){
 
       <!-- HÀNG 1 -->
       <div class="inputs">
-        <input id="a${i}" placeholder="SỐ A" oninput="calc1(${i})">
-        <input id="b${i}" placeholder="SỐ B" oninput="calc1(${i})">
+        <input id="a${i}" placeholder="Số A" oninput="calc1(${i})">
+        <input id="b${i}" placeholder="Số B" oninput="calc1(${i})">
       </div>
 
       <!-- HÀNG 2 -->
       <div class="inputs">
-        <input id="ch${i}" placeholder="CHẠM" oninput="calc1(${i})">
-        <input id="to${i}" placeholder="TỔNG" oninput="calc1(${i})">
-        <input id="bo${i}" placeholder="BỘ" oninput="calc1(${i})">
+        <input id="ch${i}" placeholder="Chạm" oninput="calc1(${i})">
+        <input id="to${i}" placeholder="Tổng" oninput="calc1(${i})">
+        <input id="bo${i}" placeholder="Bộ" oninput="calc1(${i})">
       </div>
 
       <!-- HÀNG 3 -->
       <div class="inputs">
-        <input id="da${i}" placeholder="ĐẦU" oninput="calc1(${i})">
-        <input id="du${i}" placeholder="ĐUÔI" oninput="calc1(${i})">
+        <input id="da${i}" placeholder="Đầu" oninput="calc1(${i})">
+        <input id="du${i}" placeholder="Đuôi" oninput="calc1(${i})">
       </div>
 
       <!-- HÀNG 4 -->
       <div class="inputs">
-        <input id="add${i}" placeholder="THÊM" oninput="calc1(${i})">
-        <input id="sub${i}" placeholder="BỎ" oninput="calc1(${i})">
+        <input id="add${i}" placeholder="Thêm " oninput="calc1(${i})">
+        <input id="sub${i}" placeholder="Bỏ" oninput="calc1(${i})">
       </div>
 
       <!-- HÀNG 5 -->
       <div class="inputs">
-        <input id="locham${i}" placeholder="LOẠI CHẠM" oninput="calc1(${i})">
-        <input id="lotong${i}" placeholder="LOẠI TỔNG" oninput="calc1(${i})">
-        <input id="lobo${i}" placeholder="LOẠI BỘ" oninput="calc1(${i})">
+        <input id="locham${i}" placeholder="Loại Chạm" oninput="calc1(${i})">
+        <input id="lotong${i}" placeholder="Loại Tổng" oninput="calc1(${i})">
+        <input id="lobo${i}" placeholder="Loại Bộ" oninput="calc1(${i})">
       </div>
 
       <!-- HÀNG 6 -->
       <div class="inputs">
-        <input id="lodau${i}" placeholder="LOẠI ĐẦU" oninput="calc1(${i})">
-        <input id="loduoi${i}" placeholder="LOẠI ĐUÔI" oninput="calc1(${i})">
+        <input id="lodau${i}" placeholder="Loại Đầu" oninput="calc1(${i})">
+        <input id="loduoi${i}" placeholder="Loại Đuôi" oninput="calc1(${i})">
       </div>
-
+<div class="inputs">
+  <input id="addch${i}" placeholder="Thêm Chạm" oninput="calc1(${i})">
+  <input id="addto${i}" placeholder="Thêm Tổng" oninput="calc1(${i})">
+  <input id="addbo${i}" placeholder="Thêm Bộ" oninput="calc1(${i})">
+</div>
+<div class="inputs">
+  <input id="adddau${i}" placeholder="Thêm Đầu" oninput="calc1(${i})">
+  <input id="addduoi${i}" placeholder="Thêm Đuôi" oninput="calc1(${i})">
+</div>
       <div class="result" id="r${i}"></div>
       <div class="count" id="c${i}"></div>
 <div class="actions" id="act${i}" style="display:none">
