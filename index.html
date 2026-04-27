@@ -159,10 +159,6 @@ button{
 <div id="tab2" class="tab">
 <div class="title">GHÉP TRÙNG</div>
 </div>
-
-<div id="tab5" class="tab">
-<div class="title">CHÉM DÀN</div>
-</div>
 <script>
 let startX = 0
 
@@ -200,29 +196,26 @@ function showTab(i){
     tabs[i].classList.add('active')
   }
 }
-/* SAVE */
 function save(){
+
+  if(isLoading) return // 🔥 chặn ghi đè khi đang load
+
   const d = {}
 
-  // Lưu toàn bộ input + textarea theo id
+  // Lưu toàn bộ input + textarea
   document.querySelectorAll('input,textarea').forEach(e=>{
     if(e.id) d[e.id] = e.value
   })
 
-  // Các phần kết quả còn dùng
+  // TAB 2
   d.gr = document.getElementById('gr')?.innerText || ''
   d.gc = document.getElementById('gc')?.innerText || ''
-
-  d.random_result = document.getElementById('random_result')?.innerText || ''
-  d.random_count_text = document.getElementById('random_count_text')?.innerText || ''
-
-  d.chem_result = document.getElementById('chem_result')?.innerText || ''
-  d.chem_count  = document.getElementById('chem_count')?.innerText || ''
-
-  // Lưu lại
   localStorage.setItem(KEY, JSON.stringify(d))
 }
 function load(){
+
+  isLoading = true
+
   const d = JSON.parse(localStorage.getItem(KEY) || '{}')
 
   // Restore input + textarea
@@ -234,14 +227,8 @@ function load(){
       e.value = d[id]
     }
   })
-if(d.ghep_kq){
-  document.getElementById('ghep_kq').value = d.ghep_kq
-  document.getElementById('ghep_count').innerText = d.ghep_count || ''
-  document.getElementById('ghep_actions').style.display = 'flex'
-}else{
-  document.getElementById('ghep_actions').style.display = 'none'
-}
-  /* ===== TAB 2 – GHÉP TRÙNG ===== */
+
+  // ===== TAB 2 =====
   if(d.gr){
     document.getElementById('gr').innerText = d.gr
     document.getElementById('gc').innerText = d.gc || ''
@@ -250,50 +237,21 @@ if(d.ghep_kq){
     document.getElementById('gact').style.display = 'none'
   }
 
-  /* ===== TAB 5 – RANDOM ===== */
-  if(d.random_result){
-    document.getElementById('random_result').innerText = d.random_result
-    document.getElementById('random_actions').style.display = 'flex'
-  }else{
-    document.getElementById('random_actions').style.display = 'none'
-  }
+  
+  setTimeout(()=>{
 
-  if(d.random_count_text){
-    document.getElementById('random_count_text').innerText = d.random_count_text
-  }
+    // chạy lại tab 2
+    calcG()
 
-  /* ===== TAB 5 – CHÉM ===== */
-  if(d.chem_result){
-    document.getElementById('chem_result').innerText = d.chem_result
-    document.getElementById('chem_actions').style.display = 'flex'
-  }else{
-    document.getElementById('chem_actions').style.display = 'none'
-  }
-
-  if(d.chem_count){
-    document.getElementById('chem_count').innerText = d.chem_count
-  }
-}
-for(let i=1;i<=MAX;i++){
-  const r = document.getElementById('r'+i)
-  const act = document.getElementById('act'+i)
-
-  if(r && act){
-    if(r.innerText && r.innerText.trim() !== ''){
-      act.style.display = 'flex'
-    }else{
-      act.style.display = 'none'
+    // chạy lại tab 1
+    for(let i=1;i<=MAX;i++){
+      calc1(i)
     }
-  }
+
+    isLoading = false
+
+  },50)
 }
-setTimeout(()=>{
-  for(let i=1;i<=MAX;i++){
-    if(document.getElementById('r'+i)?.innerText){
-      document.getElementById('act'+i).style.display='flex'
-    }
-    calc1(i)
-  }
-},0)
 /* TOOL */
 const digits=id=>{
   const el=document.getElementById(id)
@@ -668,7 +626,7 @@ function render2(){
     h+=`
     <div class="box" id="gbox${i}">
       <div class="title">DÀN ${i}</div>
-      <textarea id="g${i}" oninput="calcG()"></textarea>
+      <textarea id="g${i}" oninput="calcG();save()"></textarea>
       <div class="actions" style="display:flex">
         <button class="copy" onclick="pasteG(${i})">DÁN</button>
         <button class="del" onclick="document.getElementById('g${i}').value='';calcG()">XOÁ</button>
@@ -918,260 +876,59 @@ function diffPair(a,b){
 
   save()
 }
-
-/* ================= TAB 5 – CHÉM DÀN ================= */
-function render5(){
-
-const tab5 = document.getElementById('tab5');
-
-  tab5.innerHTML = `
-
-<div class="box">
-
-<div class="title">TẠO DÀN NGẪU NHIÊN</div>
-
-<input id="random_count" type="number" min="1" max="100" placeholder="Nhập số lượng" oninput="checkRandomEmpty()">
-
-<div class="result" id="random_result" style="margin-top:8px"></div>
-<div class="count" id="random_count_text"></div>
-
-<div style="margin-top:8px">
-<button class="copy" style="width:100%" onclick="createRandomDan()">TẠO DÀN</button>
-</div>
-
-<div id="random_actions" class="actions" style="display:none;margin-top:8px">
-<button class="copy" onclick="copyRandom()">COPY</button>
-<button class="del" onclick="clearRandom()">XOÁ</button>
-</div>
-
-</div>
-
-<div class="box">
-
-<div class="title">CHÉM THEO DÀN</div>
-
-<textarea id="chem_input" placeholder="DÀN" oninput="save()"></textarea>
-
-<div class="actions" style="display:flex;margin-top:8px">
-
-<button class="copy"
-onclick="navigator.clipboard.readText().then(t=>{
-document.getElementById('chem_input').value=t;
-save();
-})">DÁN</button>
-
-<button class="del"
-onclick="
-document.getElementById('chem_input').value='';
-save();
-">XOÁ</button>
-
-</div>
-
-<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
-
-<div style="display:flex;gap:8px">
-<button class="copy" onclick="runChem('tren')">CHÉM TRÊN</button>
-<button class="copy" onclick="runChem('duoi')">CHÉM DƯỚI</button>
-</div>
-
-<div style="display:flex;gap:8px">
-<button class="copy" onclick="runChem('hai')">CHÉM 2 ĐẦU</button>
-<button class="copy" onclick="runChem('giua')">CHÉM GIỮA</button>
-</div>
-
-<div style="display:flex;gap:8px">
-<button class="copy" style="flex:none;width:100%" onclick="taoDan()">TẠO DÀN</button>
-</div>
-
-</div>
-
-<div class="result" id="chem_result"></div>
-<div class="count" id="chem_count"></div>
-
-<div class="actions" id="chem_actions" style="display:none;margin-top:8px">
-
-<button class="copy"
-onclick="navigator.clipboard.writeText(document.getElementById('chem_result').innerText)">
-COPY
-</button>
-
-<button class="del"
-onclick="
-document.getElementById('chem_input').value='';
-document.getElementById('chem_result').innerText='';
-document.getElementById('chem_count').innerText='';
-document.getElementById('chem_actions').style.display='none';
-save();
-">
-XOÁ
-</button>
-
-</div>
-
-</div>
-`
-}
-function getChemDan(){
-
-  const raw = document.getElementById('chem_input').value || ''
-
-  let nums = raw.match(/\d{2}/g) || []
-
-  nums = [...new Set(nums)]
-    .map(x=>parseInt(x))
-    .sort((a,b)=>a-b)
-    .map(x=>x.toString().padStart(2,'0'))
-
-  return nums
-}
-function runChem(type){
-
-  document.getElementById('chem_result').innerText = ''
-  document.getElementById('chem_count').innerText = ''
-
-  const base = getChemDan()
-  let sizeInit = base.length
-
-  if(sizeInit < 1){
-    alert('Chưa có dàn')
-    return
-  }
-
-  // xác định mức bắt đầu theo số lượng
-  let startX = Math.floor(sizeInit / 10)
-
-  if(startX > 9) startX = 9
-  if(startX < 0) startX = 0
-
-  let output = ''
-  let lastCount = 0
-
-  for(let x = startX; x >= 0; x--){
-
-    // số giữ chuẩn 96→6
-    let keep = 96 - (9 - x) * 10
-
-    if(keep > base.length) keep = base.length
-    if(keep < 1) keep = 1
-
-    let r = []
-
-    if(type === 'tren'){
-      r = base.slice(0, keep)
-    }
-
-    else if(type === 'duoi'){
-      r = base.slice(base.length - keep)
-    }
-
-    else if(type === 'hai'){
-      let half = Math.floor(keep / 2)
-      r = [
-        ...base.slice(0, half),
-        ...base.slice(base.length - (keep - half))
-      ]
-    }
-
-    else if(type === 'giua'){
-      let start = Math.floor((base.length - keep) / 2)
-      r = base.slice(start, start + keep)
-    }
-
-    lastCount = r.length
-
-    output += x + 'x (' + r.length + ' số)\n'
-    output += r.join(',') + '\n\n'
-  }
-
-  document.getElementById('chem_result').innerText = output
-  document.getElementById('chem_count').innerText = '0x còn ' + lastCount + ' số'
-  document.getElementById('chem_actions').style.display = 'flex'
-
-  save()
-}
-function taoDan(){
-
-  document.getElementById('chem_result').innerText = ''
-  document.getElementById('chem_count').innerText = ''
-
-  const base = getChemDan()
-  let sizeInit = base.length
-
-  if(sizeInit < 1){
-    alert('Chưa có dàn')
-    return
-  }
-
-  // xác định mức bắt đầu theo số lượng dàn
-  let startX = Math.floor(sizeInit / 10)
-
-  if(startX > 9) startX = 9
-  if(startX < 0) startX = 0
-
-  // random dàn
-  let randomDan = [...base]
-
-  for(let i = randomDan.length - 1; i > 0; i--){
-    let j = Math.floor(Math.random() * (i + 1))
-    ;[randomDan[i], randomDan[j]] = [randomDan[j], randomDan[i]]
-  }
-
-  let output = ''
-
-  for(let x = startX; x >= 0; x--){
-
-    let keep = 96 - (9 - x) * 10
-
-    if(keep > randomDan.length) keep = randomDan.length
-    if(keep < 1) keep = 1
-
-    let r = randomDan.slice(0, keep)
-
-    let sortedDan = r
-      .map(x=>parseInt(x))
-      .sort((a,b)=>a-b)
-      .map(x=>x.toString().padStart(2,'0'))
-
-    output += x + 'x (' + sortedDan.length + ' số)\n'
-    output += sortedDan.join(',') + '\n\n'
-  }
-
-  document.getElementById('chem_result').innerText = output
-  document.getElementById('chem_count').innerText = '0x còn ' + (randomDan.length < 6 ? randomDan.length : 6) + ' số'
-  document.getElementById('chem_actions').style.display = 'flex'
-
-  save()
-}
 /* INIT */
 render1();
 render2();
-render5();
 load();
-// Nếu Tab 2 có dữ liệu thì tính lại
+
+/* TAB 2 */
 let hasG = false
+
 for(let i=1;i<=MAX;i++){
   if(document.getElementById('g'+i)?.value.trim()){
     hasG = true
     break
   }
 }
-if(hasG) calcG()
+
+if(hasG){
+  calcG()
+}
+
+/* TAB 1 */
 for(let i=1;i<=MAX;i++){
   if(
+    document.getElementById('a'+i)?.value ||
+    document.getElementById('b'+i)?.value ||
     document.getElementById('ch'+i)?.value ||
     document.getElementById('to'+i)?.value ||
+    document.getElementById('bo'+i)?.value ||
     document.getElementById('da'+i)?.value ||
     document.getElementById('du'+i)?.value ||
     document.getElementById('add'+i)?.value ||
-    document.getElementById('sub'+i)?.value
+    document.getElementById('sub'+i)?.value ||
+    document.getElementById('locham'+i)?.value ||
+    document.getElementById('lotong'+i)?.value ||
+    document.getElementById('lobo'+i)?.value ||
+    document.getElementById('lodau'+i)?.value ||
+    document.getElementById('loduoi'+i)?.value ||
+    document.getElementById('addch'+i)?.value ||
+    document.getElementById('addto'+i)?.value ||
+    document.getElementById('addbo'+i)?.value ||
+    document.getElementById('adddau'+i)?.value ||
+    document.getElementById('addduoi'+i)?.value
   ){
-    calc1(i);
+    calc1(i)
   }
 }
+
+/* PASTE AUTO */
 for(let i=1;i<=MAX;i++){
-  ['add','sub'].forEach(type=>{
-    const el = document.getElementById(type+i)
+
+  const addEl = document.getElementById('add'+i)
+  const subEl = document.getElementById('sub'+i)
+
+  ;[addEl, subEl].forEach(el=>{
     if(!el) return
 
     el.addEventListener('paste',()=>{
@@ -1184,68 +941,6 @@ for(let i=1;i<=MAX;i++){
       },0)
     })
   })
-}
-function createRandomDan(){
-
-  const input = document.getElementById('random_count')
-  let qty = parseInt(input.value)
-
-  if(isNaN(qty) || qty <= 0){
-    alert("Nhập số lượng")
-    return
-  }
-
-  if(qty > 100) qty = 100
-
-  let nums = []
-
-  while(nums.length < qty){
-
-    let n = Math.floor(Math.random()*100)
-      .toString()
-      .padStart(2,'0')
-
-    if(!nums.includes(n)){
-      nums.push(n)
-    }
-
-  }
-
-  nums.sort((a,b)=>parseInt(a)-parseInt(b))
-
-  document.getElementById('random_result').innerText = nums.join(',')
-  document.getElementById('random_count_text').innerText = nums.length + ' số'
-  document.getElementById('random_actions').style.display = 'flex'
-
-  save()
-}
-function copyRandom(){
-  let text = document.getElementById('random_result').innerText;
-  navigator.clipboard.writeText(text);
-}
-
-function clearRandom(){
-
-  document.getElementById('random_count').value = ''
-
-  document.getElementById('random_result').innerText = ''
-  document.getElementById('random_count_text').innerText = ''
-
-  document.getElementById('random_actions').style.display = 'none'
-
-  save()
-}
-function checkRandomEmpty(){
-
-  const v = document.getElementById('random_count').value
-
-  if(v === ''){
-    document.getElementById('random_result').innerText = ''
-    document.getElementById('random_count_text').innerText = ''
-    document.getElementById('random_actions').style.display = 'none'
-    save()
-  }
-
 }
 
 function autoResize(el){
